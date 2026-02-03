@@ -13,11 +13,17 @@ import {
   Shield,
   ClipboardList,
   GraduationCap,
-  ChevronLeft
+  ChevronLeft,
+  DollarSign,
+  TrendingUp,
+  UserCheck,
+  CalendarDays,
+  MessageSquare,
+  CheckSquare
 } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth, TeacherSubRole } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { 
@@ -31,9 +37,6 @@ import {
   SidebarTrigger,
   useSidebar
 } from '@/components/ui/sidebar';
-import type { Database } from '@/integrations/supabase/types';
-
-type AppRole = Database['public']['Enums']['app_role'];
 
 interface MenuItem {
   title: string;
@@ -63,20 +66,58 @@ const studentMenuItems: MenuItem[] = [
   { title: 'Transcript', url: '/transcript', icon: FileText },
 ];
 
-const teacherMenuItems: MenuGroup[] = [
-  { group: 'อาจารย์ประจำ', items: [
-    { title: 'รายชื่อนักศึกษา', url: '/students', icon: Users },
-  ]},
-  { group: 'โครงการ', items: [
-    { title: 'จัดการโครงการ', url: '/projects', icon: FolderKanban },
-  ]},
-  { group: 'หลักสูตร', items: [
-    { title: 'รายวิชาที่สอน', url: '/courses', icon: BookOpen },
-    { title: 'กำหนด CLO', url: '/clo', icon: FileText },
-  ]},
-  { group: 'การปฏิบัติ', items: [
-    { title: 'นักศึกษาฝึกปฏิบัติ', url: '/practical-students', icon: GraduationCap },
-  ]},
+// Teacher sub-role specific menus
+const deanMenuItems: MenuItem[] = [
+  { title: 'แดชบอร์ด KPI', url: '/dean-dashboard', icon: LayoutDashboard },
+  { title: 'รายงานการเงิน', url: '/financial-reports', icon: DollarSign },
+  { title: 'สรุปผู้บริหาร', url: '/executive-summary', icon: TrendingUp },
+  { title: 'อัตราคงอยู่', url: '/retention', icon: UserCheck },
+];
+
+const instructorMenuItems: MenuItem[] = [
+  { title: 'รายชื่อนักศึกษา', url: '/students', icon: Users },
+  { title: 'บันทึกเกรด', url: '/grades', icon: FileText },
+  { title: 'รายงาน PLO/YLO', url: '/plo-ylo', icon: TrendingUp },
+  { title: 'อัปโหลดเอกสาร', url: '/documents', icon: Upload },
+];
+
+const courseInstructorMenuItems: MenuItem[] = [
+  { title: 'รายวิชาที่รับผิดชอบ', url: '/my-courses', icon: BookOpen },
+  { title: 'กำหนด CLO', url: '/clo', icon: FileText },
+  { title: 'รายชื่อนักศึกษา', url: '/course-students', icon: Users },
+  { title: 'รายงานรายวิชา', url: '/course-reports', icon: FileText },
+];
+
+const projectManagerMenuItems: MenuItem[] = [
+  { title: 'โครงการของฉัน', url: '/my-projects', icon: FolderKanban },
+  { title: 'สร้างเอกสาร', url: '/project-docs', icon: FileText },
+  { title: 'เชื่อมโยง PLO/YLO/CLO', url: '/project-links', icon: TrendingUp },
+  { title: 'รายงานสรุปโครงการ', url: '/project-reports', icon: FileText },
+];
+
+const programManagerMenuItems: MenuItem[] = [
+  { title: 'รายงาน PLO/YLO/CLO', url: '/program-reports', icon: TrendingUp },
+  { title: 'CLO Map', url: '/clo-map', icon: FileText },
+  { title: 'ผลสรุป 5 ปี', url: '/five-year-summary', icon: FileText },
+  { title: 'มอบหมาย Course Instructor', url: '/assign-instructors', icon: Users },
+];
+
+const advisorMenuItems: MenuItem[] = [
+  { title: 'นักศึกษาในที่ปรึกษา', url: '/advisees', icon: Users },
+  { title: 'Advice Notes', url: '/advice-notes', icon: MessageSquare },
+  { title: 'การแจ้งเตือน', url: '/advisor-notifications', icon: Bell },
+  { title: 'ร้องขอรับมอบ', url: '/transfer-requests', icon: UserCheck },
+];
+
+const practicalInstructorMenuItems: MenuItem[] = [
+  { title: 'นักศึกษาฝึกปฏิบัติ', url: '/practical-students', icon: GraduationCap },
+  { title: 'ประเมิน Performance', url: '/performance', icon: TrendingUp },
+  { title: 'Schedule Task', url: '/schedule-tasks', icon: CalendarDays },
+  { title: 'หลักฐานการปฏิบัติ', url: '/evidence', icon: CheckSquare },
+];
+
+const dummyMenuItems: MenuItem[] = [
+  { title: 'ข้อมูลสาธารณะ', url: '/public-info', icon: FileText },
 ];
 
 const commonMenuItems: MenuItem[] = [
@@ -85,11 +126,58 @@ const commonMenuItems: MenuItem[] = [
   { title: 'ตั้งค่า', url: '/settings', icon: Settings },
 ];
 
+// Get menu items based on teacher sub-role
+const getTeacherMenuBySubRole = (subRole: TeacherSubRole | null): MenuItem[] => {
+  switch (subRole) {
+    case 'dean':
+      return deanMenuItems;
+    case 'instructor':
+      return instructorMenuItems;
+    case 'course_instructor':
+      return courseInstructorMenuItems;
+    case 'project_manager':
+      return projectManagerMenuItems;
+    case 'program_manager':
+      return programManagerMenuItems;
+    case 'advisor':
+      return advisorMenuItems;
+    case 'practical_instructor':
+      return practicalInstructorMenuItems;
+    case 'dummy':
+      return dummyMenuItems;
+    default:
+      return instructorMenuItems; // Default to instructor
+  }
+};
+
+const getSubRoleLabel = (subRole: TeacherSubRole | null): string => {
+  switch (subRole) {
+    case 'dean':
+      return 'คณบดี';
+    case 'instructor':
+      return 'อาจารย์ประจำ';
+    case 'course_instructor':
+      return 'อาจารย์ประจำหลักสูตร';
+    case 'project_manager':
+      return 'อาจารย์รับผิดชอบโครงการ';
+    case 'program_manager':
+      return 'อาจารย์รับผิดชอบหลักสูตร';
+    case 'advisor':
+      return 'อาจารย์ที่ปรึกษา';
+    case 'practical_instructor':
+      return 'อาจารย์ภาคปฏิบัติ';
+    case 'dummy':
+      return 'อาจารย์สมมติ';
+    default:
+      return 'อาจารย์';
+  }
+};
+
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
   const location = useLocation();
-  const { user, role, signOut } = useAuth();
+  const { user, role, teacherSubRole, signOut } = useAuth();
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -100,7 +188,7 @@ export function AppSidebar() {
       case 'student':
         return studentMenuItems;
       case 'teacher':
-        return teacherMenuItems.flatMap(group => group.items);
+        return getTeacherMenuBySubRole(teacherSubRole);
       default:
         return [];
     }
@@ -124,28 +212,9 @@ export function AppSidebar() {
     </SidebarMenuItem>
   );
 
-  const renderGroupedMenu = () => {
-    if (role === 'teacher') {
-      return teacherMenuItems.map((group) => (
-        <div key={group.group} className="mb-4">
-          {!collapsed && (
-            <p className="px-3 py-2 text-xs font-medium uppercase tracking-wider text-sidebar-muted">
-              {group.group}
-            </p>
-          )}
-          <SidebarMenu>
-            {group.items.map(renderMenuItem)}
-          </SidebarMenu>
-        </div>
-      ));
-    }
-
-    return (
-      <SidebarMenu>
-        {getMenuItems().map(renderMenuItem)}
-      </SidebarMenu>
-    );
-  };
+  const roleLabel = role === 'teacher' ? getSubRoleLabel(teacherSubRole) : 
+                    role === 'admin' ? 'ผู้ดูแลระบบ' : 
+                    role === 'student' ? 'นักศึกษา' : '';
 
   return (
     <Sidebar className={cn(
@@ -172,7 +241,19 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="p-2">
-        {renderGroupedMenu()}
+        {/* Role label */}
+        {!collapsed && roleLabel && (
+          <div className="px-3 py-2 mb-2">
+            <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+              {roleLabel}
+            </span>
+          </div>
+        )}
+
+        {/* Main menu items */}
+        <SidebarMenu>
+          {getMenuItems().map(renderMenuItem)}
+        </SidebarMenu>
         
         {/* Common menu items */}
         <div className="mt-auto pt-4 border-t border-sidebar-border">
