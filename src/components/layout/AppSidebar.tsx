@@ -69,8 +69,6 @@ const studentMenuItems: MenuItem[] = [
 // Teacher sub-role specific menus
 const deanMenuItems: MenuItem[] = [
   { title: 'แดชบอร์ด KPI', url: '/dean-dashboard', icon: LayoutDashboard },
-  { title: 'รายงานการเงิน', url: '/financial-reports', icon: DollarSign },
-  { title: 'สรุปผู้บริหาร', url: '/executive-summary', icon: TrendingUp },
   { title: 'อัตราคงอยู่', url: '/retention', icon: UserCheck },
 ];
 
