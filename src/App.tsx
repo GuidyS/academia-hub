@@ -3,6 +3,9 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import DeanDashboard from "./pages/DeanDashboard";
 import Retention from "./pages/Retention";
@@ -44,53 +47,60 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+const P = ({ children }: { children: React.ReactNode }) => (
+  <ProtectedRoute>{children}</ProtectedRoute>
+);
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/dean-dashboard" element={<DeanDashboard />} />
-          <Route path="/retention" element={<Retention />} />
-          <Route path="/users" element={<UsersManagement />} />
-          <Route path="/roles" element={<RolesManagement />} />
-          <Route path="/import" element={<ImportData />} />
-          <Route path="/export" element={<ExportData />} />
-          <Route path="/audit-log" element={<AuditLog />} />
-          <Route path="/reports" element={<Reports />} />
-          <Route path="/approvals" element={<Approvals />} />
-          <Route path="/portfolio" element={<Portfolio />} />
-          <Route path="/transcript" element={<Transcript />} />
-          <Route path="/students" element={<Students />} />
-          <Route path="/grades" element={<Grades />} />
-          <Route path="/plo-ylo" element={<PLOYLOReport />} />
-          <Route path="/documents" element={<Documents />} />
-          <Route path="/my-courses" element={<MyCourses />} />
-          <Route path="/clo" element={<CLOManagement />} />
-          <Route path="/course-students" element={<CourseStudents />} />
-          <Route path="/course-reports" element={<CourseReports />} />
-          <Route path="/my-projects" element={<MyProjects />} />
-          <Route path="/project-docs" element={<ProjectDocs />} />
-          <Route path="/project-links" element={<ProjectLinks />} />
-          <Route path="/project-reports" element={<ProjectReports />} />
-          <Route path="/program-reports" element={<ProgramReports />} />
-          <Route path="/clo-map" element={<CLOMap />} />
-          <Route path="/five-year-summary" element={<FiveYearSummary />} />
-          <Route path="/assign-instructors" element={<AssignInstructors />} />
-          <Route path="/advisees" element={<Advisees />} />
-          <Route path="/advice-notes" element={<AdviceNotes />} />
-          <Route path="/advisor-notifications" element={<AdvisorNotifications />} />
-          <Route path="/transfer-requests" element={<TransferRequests />} />
-          <Route path="/practical-students" element={<PracticalStudents />} />
-          <Route path="/performance" element={<Performance />} />
-          <Route path="/schedule-tasks" element={<ScheduleTasks />} />
-          <Route path="/evidence" element={<Evidence />} />
-          <Route path="/public-info" element={<PublicInfo />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/dashboard" element={<P><Dashboard /></P>} />
+            <Route path="/dean-dashboard" element={<P><DeanDashboard /></P>} />
+            <Route path="/retention" element={<P><Retention /></P>} />
+            <Route path="/users" element={<P><UsersManagement /></P>} />
+            <Route path="/roles" element={<P><RolesManagement /></P>} />
+            <Route path="/import" element={<P><ImportData /></P>} />
+            <Route path="/export" element={<P><ExportData /></P>} />
+            <Route path="/audit-log" element={<P><AuditLog /></P>} />
+            <Route path="/reports" element={<P><Reports /></P>} />
+            <Route path="/approvals" element={<P><Approvals /></P>} />
+            <Route path="/portfolio" element={<P><Portfolio /></P>} />
+            <Route path="/transcript" element={<P><Transcript /></P>} />
+            <Route path="/students" element={<P><Students /></P>} />
+            <Route path="/grades" element={<P><Grades /></P>} />
+            <Route path="/plo-ylo" element={<P><PLOYLOReport /></P>} />
+            <Route path="/documents" element={<P><Documents /></P>} />
+            <Route path="/my-courses" element={<P><MyCourses /></P>} />
+            <Route path="/clo" element={<P><CLOManagement /></P>} />
+            <Route path="/course-students" element={<P><CourseStudents /></P>} />
+            <Route path="/course-reports" element={<P><CourseReports /></P>} />
+            <Route path="/my-projects" element={<P><MyProjects /></P>} />
+            <Route path="/project-docs" element={<P><ProjectDocs /></P>} />
+            <Route path="/project-links" element={<P><ProjectLinks /></P>} />
+            <Route path="/project-reports" element={<P><ProjectReports /></P>} />
+            <Route path="/program-reports" element={<P><ProgramReports /></P>} />
+            <Route path="/clo-map" element={<P><CLOMap /></P>} />
+            <Route path="/five-year-summary" element={<P><FiveYearSummary /></P>} />
+            <Route path="/assign-instructors" element={<P><AssignInstructors /></P>} />
+            <Route path="/advisees" element={<P><Advisees /></P>} />
+            <Route path="/advice-notes" element={<P><AdviceNotes /></P>} />
+            <Route path="/advisor-notifications" element={<P><AdvisorNotifications /></P>} />
+            <Route path="/transfer-requests" element={<P><TransferRequests /></P>} />
+            <Route path="/practical-students" element={<P><PracticalStudents /></P>} />
+            <Route path="/performance" element={<P><Performance /></P>} />
+            <Route path="/schedule-tasks" element={<P><ScheduleTasks /></P>} />
+            <Route path="/evidence" element={<P><Evidence /></P>} />
+            <Route path="/public-info" element={<P><PublicInfo /></P>} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
