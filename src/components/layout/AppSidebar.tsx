@@ -14,7 +14,6 @@ import {
   ClipboardList,
   GraduationCap,
   ChevronLeft,
-  DollarSign,
   TrendingUp,
   UserCheck,
   CalendarDays,
@@ -23,6 +22,7 @@ import {
 } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { useAuth, type TeacherSubRole } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { 
@@ -43,7 +43,6 @@ interface MenuItem {
   icon: React.ComponentType<{ className?: string }>;
 }
 
-// All menu items grouped
 const adminMenuItems: MenuItem[] = [
   { title: 'แดชบอร์ด', url: '/dashboard', icon: LayoutDashboard },
   { title: 'จัดการผู้ใช้', url: '/users', icon: Users },
@@ -111,30 +110,50 @@ const dummyMenuItems: MenuItem[] = [
   { title: 'ข้อมูลสาธารณะ', url: '/public-info', icon: FileText },
 ];
 
-interface MenuSection {
-  label: string;
-  items: MenuItem[];
-}
+const getTeacherMenuBySubRole = (subRole: TeacherSubRole | null): MenuItem[] => {
+  switch (subRole) {
+    case 'dean': return deanMenuItems;
+    case 'instructor': return instructorMenuItems;
+    case 'course_instructor': return courseInstructorMenuItems;
+    case 'project_manager': return projectManagerMenuItems;
+    case 'program_manager': return programManagerMenuItems;
+    case 'advisor': return advisorMenuItems;
+    case 'practical_instructor': return practicalInstructorMenuItems;
+    case 'dummy': return dummyMenuItems;
+    default: return instructorMenuItems;
+  }
+};
 
-const allMenuSections: MenuSection[] = [
-  { label: 'ผู้ดูแลระบบ', items: adminMenuItems },
-  { label: 'นักศึกษา', items: studentMenuItems },
-  { label: 'คณบดี', items: deanMenuItems },
-  { label: 'อาจารย์ประจำ', items: instructorMenuItems },
-  { label: 'อาจารย์ประจำหลักสูตร', items: courseInstructorMenuItems },
-  { label: 'อาจารย์รับผิดชอบโครงการ', items: projectManagerMenuItems },
-  { label: 'อาจารย์รับผิดชอบหลักสูตร', items: programManagerMenuItems },
-  { label: 'อาจารย์ที่ปรึกษา', items: advisorMenuItems },
-  { label: 'อาจารย์ภาคปฏิบัติ', items: practicalInstructorMenuItems },
-  { label: 'อาจารย์สมมติ', items: dummyMenuItems },
-];
+const getSubRoleLabel = (subRole: TeacherSubRole | null): string => {
+  switch (subRole) {
+    case 'dean': return 'คณบดี';
+    case 'instructor': return 'อาจารย์ประจำ';
+    case 'course_instructor': return 'อาจารย์ประจำหลักสูตร';
+    case 'project_manager': return 'อาจารย์รับผิดชอบโครงการ';
+    case 'program_manager': return 'อาจารย์รับผิดชอบหลักสูตร';
+    case 'advisor': return 'อาจารย์ที่ปรึกษา';
+    case 'practical_instructor': return 'อาจารย์ภาคปฏิบัติ';
+    case 'dummy': return 'อาจารย์สมมติ';
+    default: return 'อาจารย์';
+  }
+};
 
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
   const location = useLocation();
+  const { user, role, teacherSubRole, signOut } = useAuth();
 
   const isActive = (path: string) => location.pathname === path;
+
+  const getMenuItems = (): MenuItem[] => {
+    switch (role) {
+      case 'admin': return adminMenuItems;
+      case 'student': return studentMenuItems;
+      case 'teacher': return getTeacherMenuBySubRole(teacherSubRole);
+      default: return [{ title: 'แดชบอร์ด', url: '/dashboard', icon: LayoutDashboard }];
+    }
+  };
 
   const renderMenuItem = (item: MenuItem) => (
     <SidebarMenuItem key={item.url}>
@@ -153,6 +172,10 @@ export function AppSidebar() {
       </SidebarMenuButton>
     </SidebarMenuItem>
   );
+
+  const roleLabel = role === 'teacher' ? getSubRoleLabel(teacherSubRole) : 
+                    role === 'admin' ? 'ผู้ดูแลระบบ' : 
+                    role === 'student' ? 'นักศึกษา' : 'ยังไม่มี Role';
 
   return (
     <Sidebar className={cn(
@@ -178,21 +201,17 @@ export function AppSidebar() {
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="p-2 overflow-y-auto">
-        {allMenuSections.map((section) => (
-          <div key={section.label} className="mb-3">
-            {!collapsed && (
-              <div className="px-3 py-1.5">
-                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  {section.label}
-                </span>
-              </div>
-            )}
-            <SidebarMenu>
-              {section.items.map(renderMenuItem)}
-            </SidebarMenu>
+      <SidebarContent className="p-2">
+        {!collapsed && roleLabel && (
+          <div className="px-3 py-2 mb-2">
+            <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+              {roleLabel}
+            </span>
           </div>
-        ))}
+        )}
+        <SidebarMenu>
+          {getMenuItems().map(renderMenuItem)}
+        </SidebarMenu>
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border p-3">
@@ -200,16 +219,24 @@ export function AppSidebar() {
           <Avatar className="h-9 w-9">
             <AvatarImage src="" />
             <AvatarFallback className="bg-warning text-warning-foreground text-sm">
-              U
+              {user?.email?.[0]?.toUpperCase() || 'U'}
             </AvatarFallback>
           </Avatar>
           {!collapsed && (
             <div className="flex-1 min-w-0">
               <p className="truncate text-sm font-medium text-foreground">
-                ผู้ใช้ทดสอบ
+                {user?.email || 'ผู้ใช้'}
               </p>
             </div>
           )}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={signOut}
+            className="h-8 w-8 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          >
+            <LogOut className="h-4 w-4" />
+          </Button>
         </div>
       </SidebarFooter>
     </Sidebar>
